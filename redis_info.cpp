@@ -23,6 +23,8 @@ RedisRoleInfo::RedisRoleInfo(std::vector<std::string> splitted) {
     m_redis_master_link_down_since = -1;
     m_redis_master_last_io_seconds_ago = -1;
     m_redis_connected_slaves = 0;
+    m_redis_info = splitted;
+
     m_parse_info_lines(splitted);
 }
 
@@ -34,7 +36,10 @@ RedisRoleInfo::RedisRoleInfo(std::string s) {
     m_redis_master_link_down_since = -1;
     m_redis_master_last_io_seconds_ago = -1;
     m_redis_connected_slaves = 0;
+
     std::vector<std::string> splitted = split_lines(s);
+    m_redis_info = splitted;
+
     m_parse_info_lines(splitted);
 }
 

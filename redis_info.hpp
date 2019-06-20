@@ -26,6 +26,8 @@ class RedisRoleInfo {
         int GetNumberOfConnectedSlaves();
     private:
         void m_parse_info_lines(std::vector<std::string>);
+
+        std::vector<std::string> m_redis_info;
         int m_redis_role;
         std::string m_redis_master_host;
         int m_redis_master_port;

@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
         return STATUS_CRITICAL;
     }
     
-    reply = (redisReply *) redisCommand(conn, "INFO");
+    reply = (redisReply *) redisCommand(conn, "INFO REPLICATION");
     if (!reply) {
         std::cout << "Error: INFO command to redis server failed" << std::endl;
         redisFree(conn);
