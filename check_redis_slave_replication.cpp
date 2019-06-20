@@ -182,17 +182,25 @@ int main(int argc, char **argv) {
     RedisRoleInfo role { redis_info };
 
     if ((role.GetRole() != REDIS_ROLE_SLAVE) && (role.GetRole() != REDIS_ROLE_CHAINED_REPLICATION_SLAVE)) {
-        std::cout << "Not running as a slave" << std::endl;
+        std::cout << "Not running as a slave | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0 master_last_io_ago=";
+        std::cout << role.GetMasterLastIOAgo() << "s;" << last_io_warn << ";" << last_io_crit << ";0" << std::endl;
         return STATUS_CRITICAL;
     }
 
     if (role.GetMasterLinkStatus() != REDIS_MASTER_LINK_STATUS_UP) {
-        std::cout << "Slave is connected but link to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " is down since " << role.GetMasterLinkDownSince() << " seconds" << std::endl;
+        std::cout << "Slave is connected but link to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort();
+        std::cout << " is down since " << role.GetMasterLinkDownSince() << " seconds | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0";
+        std::cout << " master_last_io_ago=" << role.GetMasterLastIOAgo() << "s;" << last_io_warn << ";" << last_io_crit << ";0";
+        std::cout << std::endl;
         return STATUS_CRITICAL;
     }
 
     last_io = role.GetMasterLastIOAgo();
-    std::cout << "Last IO to/from master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " was " << last_io << " seconds ago" << std::endl;
+    std::cout << "Last IO to/from master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " was " << last_io;
+    std::cout << " seconds ago | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0";
+    std::cout << " master_last_io_ago=" << role.GetMasterLastIOAgo() << "s;" << last_io_warn << ";" << last_io_crit << ";0";
+    std::cout << std::endl;
+
     if (last_io >= last_io_crit) {
         return STATUS_CRITICAL;
     }

@@ -139,16 +139,16 @@ int main(int argc, char **argv) {
     RedisRoleInfo role { redis_info };
 
     if ((role.GetRole() != REDIS_ROLE_SLAVE) && (role.GetRole() != REDIS_ROLE_CHAINED_REPLICATION_SLAVE)) {
-        std::cout << "Not running as a slave" << std::endl;
+        std::cout << "Not running as a slave | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0" << std::endl;
         return STATUS_CRITICAL;
     }
 
     if (role.GetMasterLinkStatus() != REDIS_MASTER_LINK_STATUS_UP) {
-        std::cout << "Slave is connected but link to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " is down since " << role.GetMasterLinkDownSince() << " seconds" << std::endl;
+        std::cout << "Slave is connected but link to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " is down since " << role.GetMasterLinkDownSince() << " seconds | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0" << std::endl;
         return STATUS_CRITICAL;
     }
 
-    std::cout << "Slave is connected to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << std::endl;
+    std::cout << "Slave is connected to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0" << std::endl;
     return STATUS_OK;
 }
 

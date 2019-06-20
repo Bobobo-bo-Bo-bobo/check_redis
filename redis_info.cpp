@@ -5,14 +5,35 @@
 #include <string>
 #include <vector>
 
-RedisRoleInfo::RedisRoleInfo(): m_redis_role{ REDIS_ROLE_UNKNOWN }, m_redis_master_host{ "" }, m_redis_master_port{ 0 },
-    m_redis_master_link_status{ REDIS_MASTER_LINK_STATUS_UNKNOWN } {};
+RedisRoleInfo::RedisRoleInfo() {
+    m_redis_role = REDIS_ROLE_UNKNOWN;
+    m_redis_master_host = "";
+    m_redis_master_port = 0;
+    m_redis_master_link_status = REDIS_MASTER_LINK_STATUS_UNKNOWN;
+    m_redis_master_link_down_since = -1;
+    m_redis_master_last_io_seconds_ago = -1;
+    m_redis_connected_slaves = 0;
+}
 
-RedisRoleInfo::RedisRoleInfo(std::vector<std::string> splitted): m_redis_master_host{ "" }, m_redis_master_port{ 0 } {
+RedisRoleInfo::RedisRoleInfo(std::vector<std::string> splitted) {
+    m_redis_role = REDIS_ROLE_UNKNOWN;
+    m_redis_master_host = "";
+    m_redis_master_port = 0;
+    m_redis_master_link_status = REDIS_MASTER_LINK_STATUS_UNKNOWN;
+    m_redis_master_link_down_since = -1;
+    m_redis_master_last_io_seconds_ago = -1;
+    m_redis_connected_slaves = 0;
     m_parse_info_lines(splitted);
 }
 
-RedisRoleInfo::RedisRoleInfo(std::string s): m_redis_master_host{ "" }, m_redis_master_port{ 0 } {
+RedisRoleInfo::RedisRoleInfo(std::string s) {
+    m_redis_role = REDIS_ROLE_UNKNOWN;
+    m_redis_master_host = "";
+    m_redis_master_port = 0;
+    m_redis_master_link_status = REDIS_MASTER_LINK_STATUS_UNKNOWN;
+    m_redis_master_link_down_since = -1;
+    m_redis_master_last_io_seconds_ago = -1;
+    m_redis_connected_slaves = 0;
     std::vector<std::string> splitted = split_lines(s);
     m_parse_info_lines(splitted);
 }
