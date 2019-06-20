@@ -63,7 +63,6 @@ int main(int argc, char **argv) {
                           break;
                       }
             case 'H': {
-
                           hostname = optarg;
                           break;
                       }
