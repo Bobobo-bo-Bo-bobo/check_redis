@@ -65,6 +65,13 @@ void RedisRoleInfo::m_parse_info_lines(std::vector<std::string> splitted) {
                     m_redis_master_link_status = REDIS_MASTER_LINK_STATUS_UNKNOWN;
                 }
             }
+
+            std::string::size_type ld_pos = line.find(s_master_link_down_since_str);
+            if (ld_pos != std::string::npos) {
+                std::string ld_line = line;
+                std::string ld = ld_line.erase(0, ld_pos + s_master_link_down_since_str.length());
+                m_redis_master_link_down_since = std::stoi(ld, nullptr);
+            }
         }
     }
 };
@@ -79,5 +86,9 @@ int RedisRoleInfo::GetMasterPort(void) {
 
 int RedisRoleInfo::GetMasterLinkStatus(void) {
     return m_redis_master_link_status;
+}
+
+int RedisRoleInfo::GetMasterLinkDownSince(void) {
+    return m_redis_master_link_down_since;
 }
 
