@@ -13,6 +13,7 @@ RedisRoleInfo::RedisRoleInfo() {
     m_redis_master_link_down_since = -1;
     m_redis_master_last_io_seconds_ago = -1;
     m_redis_connected_slaves = 0;
+    m_master_repl_offset = -1;
 }
 
 RedisRoleInfo::RedisRoleInfo(std::vector<std::string> splitted) {
@@ -24,6 +25,7 @@ RedisRoleInfo::RedisRoleInfo(std::vector<std::string> splitted) {
     m_redis_master_last_io_seconds_ago = -1;
     m_redis_connected_slaves = 0;
     m_redis_info = splitted;
+    m_master_repl_offset = -1;
 
     m_parse_info_lines(splitted);
 }
@@ -36,6 +38,7 @@ RedisRoleInfo::RedisRoleInfo(std::string s) {
     m_redis_master_link_down_since = -1;
     m_redis_master_last_io_seconds_ago = -1;
     m_redis_connected_slaves = 0;
+    m_master_repl_offset = -1;
 
     std::vector<std::string> splitted = split_lines(s);
     m_redis_info = splitted;
@@ -109,6 +112,14 @@ void RedisRoleInfo::m_parse_info_lines(std::vector<std::string> splitted) {
             std::string cs = cs_line.erase(0, cs_pos + s_connected_slaves_str.length());
             m_redis_connected_slaves = std::stoi(cs, nullptr);
         }
+
+        std::string::size_type mrpl_pos = line.find(s_master_repl_offset_str);
+        if (mrpl_pos != std::string::npos) {
+            std::string mrpl_line = line;
+            std::string mrpl = mrpl_line.erase(0, mrpl_pos + s_master_repl_offset_str.length());
+            m_master_repl_offset = std::stoll(mrpl, nullptr);
+        }
+
     }
     // Note: No master/slave role can't be selected by looking at the role entry alone.
     //       In a chained replication a slave which also servers as a master for another slave
@@ -141,5 +152,25 @@ int RedisRoleInfo::GetMasterLastIOAgo(void) {
 
 int RedisRoleInfo::GetNumberOfConnectedSlaves(void) {
     return m_redis_connected_slaves;
+}
+
+std::vector<RedisSlaveInfo> RedisRoleInfo::GetSlaveInformation(void) {
+    std::regex re_slave_match("^(slave[0-9]+:)(.*)$", std::regex::ECMAScript);
+
+    if (m_master_slave_info.empty()) {
+        for (auto line: m_redis_info) {
+            if (regex_match(line, re_slave_match)) {
+                std::string slave_info_str = std::regex_replace(line, re_slave_match, "$2");
+                RedisSlaveInfo rsi = m_parse_slave_info(slave_info_str);
+                m_master_slave_info.push_back(rsi);
+            }
+        }
+    }
+    return m_master_slave_info;
+};
+
+RedisSlaveInfo RedisRoleInfo::m_parse_slave_info(std::string s) {
+    RedisSlaveInfo rsi{ s };
+    return rsi;
 }
 

@@ -12,6 +12,7 @@ link_directories(${HIREDIS_LIBRARY_DIRS})
 
 add_library(util util.cpp)
 add_library(redis_info redis_info.cpp)
+add_library(redis_slave_info redis_slave_info.cpp)
 
 # header file for results
 configure_file("${PROJECT_SOURCE_DIR}/check_redis_config.h.in" "${PROJECT_SOURCE_DIR}/check_redis_config.h")
@@ -19,16 +20,19 @@ configure_file("${PROJECT_SOURCE_DIR}/check_redis_config.h.in" "${PROJECT_SOURCE
 add_executable(check_redis_slave check_redis_slave.cpp)
 target_link_libraries(check_redis_slave redis_info)
 target_link_libraries(check_redis_slave util)
+target_link_libraries(check_redis_slave redis_slave_info)
 target_link_libraries(check_redis_slave ${HIREDIS_LDFLAGS})
 
 add_executable(check_redis_slave_replication check_redis_slave_replication.cpp)
 target_link_libraries(check_redis_slave_replication redis_info)
 target_link_libraries(check_redis_slave_replication util)
+target_link_libraries(check_redis_slave_replication redis_slave_info)
 target_link_libraries(check_redis_slave_replication ${HIREDIS_LDFLAGS})
 
 add_executable(check_redis_master check_redis_master.cpp)
 target_link_libraries(check_redis_master redis_info)
 target_link_libraries(check_redis_master util)
+target_link_libraries(check_redis_master redis_slave_info)
 target_link_libraries(check_redis_master ${HIREDIS_LDFLAGS})
 
 install(TARGETS check_redis_slave DESTINATION bin)
