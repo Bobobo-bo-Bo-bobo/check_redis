@@ -74,7 +74,7 @@ void RedisRoleInfo::m_parse_info_lines(std::vector<std::string> splitted) {
             }
 
             std::string::size_type ls_pos = line.find(s_master_last_io_seconds_ago_str);
-            if (ls_pos = std::string::npos) {
+            if (ls_pos != std::string::npos) {
                 std::string ls_line = line;
                 std::string ls = ls_line.erase(0, ls_pos + s_master_last_io_seconds_ago_str.length());
                 m_redis_master_last_io_seconds_ago = std::stoi(ls, nullptr);

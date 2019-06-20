@@ -9,17 +9,19 @@
 #include <string>
 #include <vector>
 
-const char *short_options = "H:hp:t:";
+const char *short_options = "H:hp:t:c:w:";
 static struct option long_options[] = {
     { "host", required_argument, 0, 'H' },
     { "help", no_argument, 0, 'h' },
     { "port", required_argument, 0, 'p' },
     { "timeout", required_argument, 0, 't' },
+    { "critical", required_argument, 0, 'c' },
+    { "warning", required_argument, 0, 'w' },
     { NULL, 0, 0, 0 },
 };
 
 void usage(void) {
-    std::cout << "check_redis_slave version " << CHECK_REDIS_VERSION << std::endl;
+    std::cout << "check_redis_slave_replication version " << CHECK_REDIS_VERSION << std::endl;
     std::cout << std::endl;
     std::cout << "Copyright (c) by Andreas Maus <maus@ypbind.de>" << std::endl;
     std::cout << "This program comes with ABSOLUTELY NO WARRANTY." << std::endl;
@@ -27,22 +29,26 @@ void usage(void) {
     std::cout << "check_redis_slave is distributed under the terms of the GNU General" << std::endl;
     std::cout << "Public License Version 3. (http://www.gnu.org/copyleft/gpl.html)" << std::endl;
     std::cout << std::endl;
-    std::cout << "Check if Redis slave is connected to it's master" << std::endl;
+    std::cout << "Usage: check_redis_slave_replication [-h|--help] -H <host>|--host=<host> [-p <port>|--port=<port>]" <<std::endl;
+    std::cout << "         [-t <sec>|--timeout=<sec>] [-c <sec>|--critical=<sec>] [-w <sec>|--warn=<sec>]" << std::endl;
     std::cout << std::endl;
-    std::cout << "Usage: check_redis_slave [-h|--help] -H <host>|--host=<host> [-p <port>|--port=<port>]" <<std::endl;
-    std::cout << "         [-t <sec>|--timeout=<sec>]" << std::endl;
-    std::cout << std::endl;
-    std::cout << "  -h              This text." << std::endl;
+    std::cout << "  -h                  This text." << std::endl;
     std::cout << "  --help" << std::endl;
     std::cout << std::endl;
-    std::cout << "  -H <host>       Redis server to connect to." << std::endl;
-    std::cout << "  --host=<host>   This option is mandatory." << std::endl;
+    std::cout << "  -H <host>           Redis server to connect to." << std::endl;
+    std::cout << "  --host=<host>       This option is mandatory." << std::endl;
     std::cout << std::endl;
-    std::cout << "  -p <port>       Redis port to connect to," << std::endl;
-    std::cout << "  --port=<port>   Default: " << DEFAULT_REDIS_PORT << std::endl;
+    std::cout << "  -c <sec>            Report critical condition if last master was <sec> or more ago." << std::endl;
+    std::cout << "  --critical=<sec>    Default: " << DEFAULT_REDIS_IO_AGO_CRITICAL << std::endl;
     std::cout << std::endl;
-    std::cout << "  -t <sec>        Connection timout in seconds." << std::endl;
-    std::cout << "  --timeout=<sec> Default: " << DEFAULT_REDIS_CONNECT_TIMEOUT << std::endl;
+    std::cout << "  -p <port>           Redis port to connect to," << std::endl;
+    std::cout << "  --port=<port>       Default: " << DEFAULT_REDIS_PORT << std::endl;
+    std::cout << std::endl;
+    std::cout << "  -t <sec>            Connection timout in seconds." << std::endl;
+    std::cout << "  --timeout=<sec>     Default: " << DEFAULT_REDIS_CONNECT_TIMEOUT << std::endl;
+    std::cout << std::endl;
+    std::cout << "  -w <sec>            Report critical condition if last master was <sec> or more ago." << std::endl;
+    std::cout << "  --warn=<sec>        Default: " << DEFAULT_REDIS_IO_AGO_WARNING << std::endl;
     std::cout << std::endl;
 }
 
@@ -52,8 +58,11 @@ int main(int argc, char **argv) {
     redisContext *conn = NULL;
     redisReply *reply = NULL;
     int t_sec = DEFAULT_REDIS_CONNECT_TIMEOUT;
+    int last_io_crit = DEFAULT_REDIS_IO_AGO_CRITICAL;
+    int last_io_warn = DEFAULT_REDIS_IO_AGO_WARNING;
     int option_index = 0;
     int _rc;
+    int last_io = -1;
 
     while ((_rc = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1) {
         switch (_rc) {
@@ -63,6 +72,7 @@ int main(int argc, char **argv) {
                           break;
                       }
             case 'H': {
+
                           hostname = optarg;
                           break;
                       }
@@ -90,6 +100,34 @@ int main(int argc, char **argv) {
                           }
                           break;
                       }
+            case 'c': {
+                          std::string c_str{ optarg };
+                          std::string::size_type remain;
+                          last_io_crit = std::stoi(c_str, &remain);
+                          if (remain != c_str.length()) {
+                              std::cerr << "Error: Can't convert critical threshold " << optarg << " to a number" << std::endl;
+                              return STATUS_UNKNOWN;
+                          }
+                          if (last_io_crit <= 0) {
+                              std::cerr << "Error: Critical threshold must be greater than 0" << std::endl;
+                              return STATUS_UNKNOWN;
+                          }
+                          break;
+                      }
+            case 'w': {
+                          std::string w_str{ optarg };
+                          std::string::size_type remain;
+                          last_io_warn = std::stoi(w_str, &remain);
+                          if (remain != w_str.length()) {
+                              std::cerr << "Error: Can't convert warning threshold " << optarg << " to a number" << std::endl;
+                              return STATUS_UNKNOWN;
+                          }
+                          if (last_io_warn <= 0) {
+                              std::cerr << "Error: Warning threshold must be greater than 0" << std::endl;
+                              return STATUS_UNKNOWN;
+                          }
+                          break;
+                      }
             default: {
                           std::cerr << "Error: Unknwon argument " << _rc << std::endl;
                           usage();
@@ -103,6 +141,11 @@ int main(int argc, char **argv) {
         std::cerr << "Error: No host specified" << std::endl;
         std::cerr << std::endl;
         usage();
+        return STATUS_UNKNOWN;
+    }
+
+    if (last_io_crit < last_io_warn) {
+        std::cerr << "Error: Critical threshold must be greater or equal than warning threshold" << std::endl;
         return STATUS_UNKNOWN;
     }
 
@@ -148,7 +191,15 @@ int main(int argc, char **argv) {
         return STATUS_CRITICAL;
     }
 
-    std::cout << "Slave is connected to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << std::endl;
+    last_io = role.GetMasterLastIOAgo();
+    std::cout << "Last IO to/from master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " was " << last_io << " seconds ago" << std::endl;
+    if (last_io >= last_io_crit) {
+        return STATUS_CRITICAL;
+    }
+    if (last_io >= last_io_warn) {
+        return STATUS_WARNING;
+    }
+
     return STATUS_OK;
 }
 
