@@ -1,0 +1,6 @@
+tmp/
+build/
+*.swp
+check_redis_config.h
+*.cbp
+
