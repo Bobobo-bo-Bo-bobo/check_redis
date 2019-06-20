@@ -18,8 +18,8 @@ configure_file("${PROJECT_SOURCE_DIR}/check_redis_config.h.in" "${PROJECT_SOURCE
 
 add_executable(check_redis_slave check_redis_slave.cpp)
 
-target_link_libraries(check_redis_slave util)
 target_link_libraries(check_redis_slave redis_info)
+target_link_libraries(check_redis_slave util)
 target_link_libraries(check_redis_slave ${HIREDIS_LDFLAGS})
 
 install(TARGETS check_redis_slave DESTINATION bin)

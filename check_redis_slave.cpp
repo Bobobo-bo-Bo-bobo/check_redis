@@ -1,5 +1,5 @@
 #include "check_redis_config.h"
-#include "util.hpp"
+#include "redis_info.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -32,26 +32,37 @@ int main(int argc, char **argv) {
     }
     
     reply = (redisReply *) redisCommand(conn, "INFO");
+    if (!reply) {
+        std::cout << "Error: INFO command to redis server failed" << std::endl;
+        redisFree(conn);
+        return STATUS_CRITICAL;
+    }
+
     if (reply->type == REDIS_REPLY_ERROR) {
         std::cout << "Error: INFO command to redis server returned an error: " << reply->str << std::endl;
         freeReplyObject(reply);
+        redisFree(conn);
         return STATUS_CRITICAL;
     }
     
     redis_info = reply->str;
+ 
     freeReplyObject(reply);
     redisFree(conn);
-    
-    std::vector<std::string> splitted = split_lines(redis_info);
-    for (auto line: splitted) {
-        std::string::size_type role_pos = line.find("role:");
-        if (role_pos != std::string::npos) {
-            std::string role_line = line;
-            std::string role_str { "role:" };
-            std::string role = role_line.erase(0, role_pos + role_str.length());
-            std::cout << line << " / " << role_pos << " / " << role << std::endl;
-        }
+ 
+    RedisRoleInfo role { redis_info };
+
+    if (role.GetRole() != REDIS_ROLE_SLAVE) {
+        std::cout << "Not a slave" << std::endl;
+        return STATUS_CRITICAL;
     }
-    return 0;
+
+    if (role.GetMasterLinkStatus() != REDIS_MASTER_LINK_STATUS_UP) {
+        std::cout << "Slave is connected but link to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " is down" << std::endl;
+        return STATUS_CRITICAL;
+    }
+
+    std::cout << "Slave is connected to master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << std::endl;
+    return STATUS_OK;
 }
 
