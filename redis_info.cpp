@@ -72,6 +72,13 @@ void RedisRoleInfo::m_parse_info_lines(std::vector<std::string> splitted) {
                 std::string ld = ld_line.erase(0, ld_pos + s_master_link_down_since_str.length());
                 m_redis_master_link_down_since = std::stoi(ld, nullptr);
             }
+
+            std::string::size_type ls_pos = line.find(s_master_last_io_seconds_ago_str);
+            if (ls_pos = std::string::npos) {
+                std::string ls_line = line;
+                std::string ls = ls_line.erase(0, ls_pos + s_master_last_io_seconds_ago_str.length());
+                m_redis_master_last_io_seconds_ago = std::stoi(ls, nullptr);
+            }
         }
     }
 };
@@ -90,5 +97,9 @@ int RedisRoleInfo::GetMasterLinkStatus(void) {
 
 int RedisRoleInfo::GetMasterLinkDownSince(void) {
     return m_redis_master_link_down_since;
+}
+
+int RedisRoleInfo::GetMasterLastIOAgo(void) {
+    return m_redis_master_last_io_seconds_ago;
 }
 
