@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
  
     RedisRoleInfo role { redis_info };
 
-    if (role.GetRole() != REDIS_ROLE_SLAVE) {
+    if ((role.GetRole() != REDIS_ROLE_SLAVE) && (role.GetRole() != REDIS_ROLE_CHAINED_REPLICATION_SLAVE)) {
         std::cout << "Not running as a slave" << std::endl;
         return STATUS_CRITICAL;
     }

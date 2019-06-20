@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(check_redis)
 
-set (CHECK_REDIS_VERSION "1.1.0")
+set (CHECK_REDIS_VERSION "1.1.1")
 # set(CMAKE_BUILD_TYPE Debug)
 
 include (FindPkgConfig)
