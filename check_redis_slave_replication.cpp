@@ -31,6 +31,8 @@ void usage(void) {
     std::cout << "check_redis_slave is distributed under the terms of the GNU General" << std::endl;
     std::cout << "Public License Version 3. (http://www.gnu.org/copyleft/gpl.html)" << std::endl;
     std::cout << std::endl;
+    std::cout << "Check the last time a slave was connected to a master or the amount of data not replicated yet." << std::endl;
+    std::cout << std::endl;
     std::cout << "Usage: check_redis_slave_replication [-h|--help] -H <host>|--host=<host> [-p <port>|--port=<port>]" <<std::endl;
     std::cout << "         [-t <sec>|--timeout=<sec>] [-c <lim>|--critical=<lim>] [-w <lim>|--warn=<lim>]" << std::endl;
     std::cout << std::endl;
