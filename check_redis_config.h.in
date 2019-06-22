@@ -9,6 +9,8 @@
 
 #define DEFAULT_REDIS_IO_AGO_WARNING 15
 #define DEFAULT_REDIS_IO_AGO_CRITICAL 30
+#define DEFAULT_REDIS_SLAVE_OFFSET_WARNING 10240
+#define DEFAULT_REDIS_SLAVE_OFFET_CRITICAL 20480
 
 #define STATUS_OK 0
 #define STATUS_WARNING 1
@@ -28,6 +30,16 @@
 #define REDIS_SLAVE_STATE_WAIT_BGSAVE 31
 #define REDIS_SLAVE_STATE_SEND_BULK 32
 #define REDIS_SLAVE_STATE_ONLINE 33
+
+const std::string s_role_str{ "role:" };
+const std::string s_master_host_str{ "master_host:" };
+const std::string s_master_port_str{ "master_port:" };
+const std::string s_master_link_status_str{ "master_link_status:" };
+const std::string s_master_link_down_since_str{ "master_link_down_since_seconds:" };
+const std::string s_master_last_io_seconds_ago_str{ "master_last_io_seconds_ago:" };
+const std::string s_connected_slaves_str{ "connected_slaves:" };
+const std::string s_master_repl_offset_str{ "master_repl_offset:" };
+const std::string s_slave_repl_offset_str{ "slave_repl_offset:" };
 
 #endif /* __CHECK_REDIS_CONFIG_H__ */
 
