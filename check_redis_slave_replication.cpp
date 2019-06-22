@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 const char *short_options = "H:hp:t:c:w:";
 static struct option long_options[] = {
@@ -17,6 +18,7 @@ static struct option long_options[] = {
     { "timeout", required_argument, 0, 't' },
     { "critical", required_argument, 0, 'c' },
     { "warning", required_argument, 0, 'w' },
+    { "data", no_argument, 0, 'D' },
     { NULL, 0, 0, 0 },
 };
 
@@ -30,16 +32,20 @@ void usage(void) {
     std::cout << "Public License Version 3. (http://www.gnu.org/copyleft/gpl.html)" << std::endl;
     std::cout << std::endl;
     std::cout << "Usage: check_redis_slave_replication [-h|--help] -H <host>|--host=<host> [-p <port>|--port=<port>]" <<std::endl;
-    std::cout << "         [-t <sec>|--timeout=<sec>] [-c <sec>|--critical=<sec>] [-w <sec>|--warn=<sec>]" << std::endl;
+    std::cout << "         [-t <sec>|--timeout=<sec>] [-c <lim>|--critical=<lim>] [-w <lim>|--warn=<lim>]" << std::endl;
     std::cout << std::endl;
     std::cout << "  -h                  This text." << std::endl;
     std::cout << "  --help" << std::endl;
     std::cout << std::endl;
+    std::cout << "  -D                  Check for missing data instead of last sync" << std::endl;
+    std::cout << "  --data" << std::endl;
+    std::cout << std::endl;
     std::cout << "  -H <host>           Redis server to connect to." << std::endl;
     std::cout << "  --host=<host>       This option is mandatory." << std::endl;
     std::cout << std::endl;
-    std::cout << "  -c <sec>            Report critical condition if last master was <sec> or more ago." << std::endl;
-    std::cout << "  --critical=<sec>    Default: " << DEFAULT_REDIS_IO_AGO_CRITICAL << std::endl;
+    std::cout << "  -c <lim>            Report critical condition if last master was <lim> or more ago." << std::endl;
+    std::cout << "  --critical=<lim>    or if missing data is greater or equal than <lim> (if -D/--data is used)" << std::endl;
+    std::cout << "                      Default: " << DEFAULT_REDIS_IO_AGO_CRITICAL << " sec or " << DEFAULT_REDIS_SLAVE_OFFET_CRITICAL <<" bytes" << std::endl;
     std::cout << std::endl;
     std::cout << "  -p <port>           Redis port to connect to," << std::endl;
     std::cout << "  --port=<port>       Default: " << DEFAULT_REDIS_PORT << std::endl;
@@ -48,7 +54,8 @@ void usage(void) {
     std::cout << "  --timeout=<sec>     Default: " << DEFAULT_REDIS_CONNECT_TIMEOUT << std::endl;
     std::cout << std::endl;
     std::cout << "  -w <sec>            Report critical condition if last master was <sec> or more ago." << std::endl;
-    std::cout << "  --warn=<sec>        Default: " << DEFAULT_REDIS_IO_AGO_WARNING << std::endl;
+    std::cout << "  --warn=<sec>        or if missing data is greater or equal than <lim> (if -D/--data is used)" << std::endl;
+    std::cout << "                      Default: " << DEFAULT_REDIS_IO_AGO_WARNING << " sec or " << DEFAULT_REDIS_SLAVE_OFFSET_WARNING << " bytes" << std::endl;
     std::cout << std::endl;
 }
 
@@ -58,11 +65,17 @@ int main(int argc, char **argv) {
     redisContext *conn = NULL;
     redisReply *reply = NULL;
     int t_sec = DEFAULT_REDIS_CONNECT_TIMEOUT;
-    int last_io_crit = DEFAULT_REDIS_IO_AGO_CRITICAL;
+    long long warn_delta = DEFAULT_REDIS_SLAVE_OFFSET_WARNING;
+    long long crit_delta = DEFAULT_REDIS_SLAVE_OFFET_CRITICAL;
     int last_io_warn = DEFAULT_REDIS_IO_AGO_WARNING;
+    int last_io_crit = DEFAULT_REDIS_IO_AGO_CRITICAL;
+    long long warn_limit = -1;
+    long long crit_limit = -1;
     int option_index = 0;
     int _rc;
     int last_io = -1;
+    bool data_check = false;
+    long long data_delta = -1;
 
     while ((_rc = getopt_long(argc, argv, short_options, long_options, &option_index)) != -1) {
         switch (_rc) {
@@ -72,8 +85,11 @@ int main(int argc, char **argv) {
                           break;
                       }
             case 'H': {
-
                           hostname = optarg;
+                          break;
+                      }
+            case 'D': {
+                          data_check = true;
                           break;
                       }
             case 'p': {
@@ -103,12 +119,12 @@ int main(int argc, char **argv) {
             case 'c': {
                           std::string c_str{ optarg };
                           std::string::size_type remain;
-                          last_io_crit = std::stoi(c_str, &remain);
+                          crit_limit = std::stoll(c_str, &remain);
                           if (remain != c_str.length()) {
                               std::cerr << "Error: Can't convert critical threshold " << optarg << " to a number" << std::endl;
                               return STATUS_UNKNOWN;
                           }
-                          if (last_io_crit <= 0) {
+                          if (crit_limit <= 0) {
                               std::cerr << "Error: Critical threshold must be greater than 0" << std::endl;
                               return STATUS_UNKNOWN;
                           }
@@ -117,12 +133,12 @@ int main(int argc, char **argv) {
             case 'w': {
                           std::string w_str{ optarg };
                           std::string::size_type remain;
-                          last_io_warn = std::stoi(w_str, &remain);
+                          warn_limit = std::stoi(w_str, &remain);
                           if (remain != w_str.length()) {
                               std::cerr << "Error: Can't convert warning threshold " << optarg << " to a number" << std::endl;
                               return STATUS_UNKNOWN;
                           }
-                          if (last_io_warn <= 0) {
+                          if (warn_limit <= 0) {
                               std::cerr << "Error: Warning threshold must be greater than 0" << std::endl;
                               return STATUS_UNKNOWN;
                           }
@@ -137,6 +153,22 @@ int main(int argc, char **argv) {
         }
     }
 
+    if (data_check) {
+        if (warn_limit != -1) {
+            warn_delta = warn_limit;
+        }
+        if (crit_limit != -1) {
+            crit_delta = crit_limit;
+        }
+    } else {
+        if (warn_limit != -1) {
+            last_io_warn = warn_limit;
+        }
+        if (crit_limit != -1) {
+            last_io_crit = crit_limit;
+        }
+    }
+
     if (hostname == "") {
         std::cerr << "Error: No host specified" << std::endl;
         std::cerr << std::endl;
@@ -144,7 +176,7 @@ int main(int argc, char **argv) {
         return STATUS_UNKNOWN;
     }
 
-    if (last_io_crit < last_io_warn) {
+    if ((last_io_crit < last_io_warn) || (crit_delta < warn_delta)) {
         std::cerr << "Error: Critical threshold must be greater or equal than warning threshold" << std::endl;
         return STATUS_UNKNOWN;
     }
@@ -195,19 +227,33 @@ int main(int argc, char **argv) {
         return STATUS_CRITICAL;
     }
 
-    last_io = role.GetMasterLastIOAgo();
-    std::cout << "Last IO to/from master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " was " << last_io;
-    std::cout << " seconds ago | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0";
-    std::cout << " master_last_io_ago=" << role.GetMasterLastIOAgo() << "s;" << last_io_warn << ";" << last_io_crit << ";0";
+    _rc = STATUS_OK;
+    if (data_check) {
+        data_delta = role.GetMissingData();
+        std::cout << "Slave data is " << std::abs(data_delta) << " bytes behind master at " << role.GetMasterHost() << ", port " << role.GetMasterPort();
+        std::cout << " | slave_replication_delta=" << data_delta << "B;" << warn_delta << ";" << crit_delta;
+        if (std::abs(data_delta) >= crit_delta) {
+            _rc = STATUS_CRITICAL;
+        }
+        if (std::abs(data_delta) >= warn_delta) {
+            _rc = STATUS_WARNING;
+        }
+    } else {
+        last_io = role.GetMasterLastIOAgo();
+        std::cout << "Last sync with master at " << role.GetMasterHost() << ", port " << role.GetMasterPort() << " was " << last_io;
+        std::cout << " seconds ago";
+        std::cout << " | master_last_io_ago=" << role.GetMasterLastIOAgo() << "s;" << last_io_warn << ";" << last_io_crit << ";0";
+
+        if (last_io >= last_io_crit) {
+            _rc = STATUS_CRITICAL;
+        }
+        if (last_io >= last_io_warn) {
+            _rc = STATUS_WARNING;
+        }
+    }
+    std::cout << " connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0";
     std::cout << std::endl;
 
-    if (last_io >= last_io_crit) {
-        return STATUS_CRITICAL;
-    }
-    if (last_io >= last_io_warn) {
-        return STATUS_WARNING;
-    }
-
-    return STATUS_OK;
+    return _rc;
 }
 

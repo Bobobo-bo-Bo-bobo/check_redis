@@ -14,6 +14,7 @@ RedisRoleInfo::RedisRoleInfo() {
     m_redis_master_last_io_seconds_ago = -1;
     m_redis_connected_slaves = 0;
     m_master_repl_offset = -1;
+    m_slave_repl_offset = -1;
 }
 
 RedisRoleInfo::RedisRoleInfo(std::vector<std::string> splitted) {
@@ -26,6 +27,7 @@ RedisRoleInfo::RedisRoleInfo(std::vector<std::string> splitted) {
     m_redis_connected_slaves = 0;
     m_redis_info = splitted;
     m_master_repl_offset = -1;
+    m_slave_repl_offset = -1;
 
     m_parse_info_lines(splitted);
 }
@@ -39,6 +41,7 @@ RedisRoleInfo::RedisRoleInfo(std::string s) {
     m_redis_master_last_io_seconds_ago = -1;
     m_redis_connected_slaves = 0;
     m_master_repl_offset = -1;
+    m_slave_repl_offset = -1;
 
     std::vector<std::string> splitted = split_lines(s);
     m_redis_info = splitted;
@@ -120,6 +123,12 @@ void RedisRoleInfo::m_parse_info_lines(std::vector<std::string> splitted) {
             m_master_repl_offset = std::stoll(mrpl, nullptr);
         }
 
+        std::string::size_type srpl_pos = line.find(s_slave_repl_offset_str);
+        if (srpl_pos != std::string::npos) {
+            std::string srpl_line = line;
+            std::string srpl = srpl_line.erase(0, srpl_pos + s_slave_repl_offset_str.length());
+            m_slave_repl_offset = std::stoll(srpl, nullptr);
+        }
     }
     // Note: No master/slave role can't be selected by looking at the role entry alone.
     //       In a chained replication a slave which also servers as a master for another slave
@@ -183,3 +192,6 @@ RedisSlaveInfo RedisRoleInfo::m_parse_slave_info(std::string s) {
     return rsi;
 }
 
+long long RedisRoleInfo::GetMissingData(void) {
+    return m_master_repl_offset - m_slave_repl_offset;
+}
