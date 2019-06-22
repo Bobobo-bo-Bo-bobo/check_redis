@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
             case 'w': {
                           std::string w_str{ optarg };
                           std::string::size_type remain;
-                          warn_limit = std::stoi(w_str, &remain);
+                          warn_limit = std::stoll(w_str, &remain);
                           if (remain != w_str.length()) {
                               std::cerr << "Error: Can't convert warning threshold " << optarg << " to a number" << std::endl;
                               return STATUS_UNKNOWN;
