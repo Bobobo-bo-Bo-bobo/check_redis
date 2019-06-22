@@ -155,14 +155,23 @@ int RedisRoleInfo::GetNumberOfConnectedSlaves(void) {
 }
 
 std::vector<RedisSlaveInfo> RedisRoleInfo::GetSlaveInformation(void) {
-    std::regex re_slave_match("^(slave[0-9]+:)(.*)$", std::regex::ECMAScript);
+    std::string::size_type pos;
+    std::string::size_type colon_pos;
+    std::string slave_info_str;
 
     if (m_master_slave_info.empty()) {
         for (auto line: m_redis_info) {
-            if (regex_match(line, re_slave_match)) {
-                std::string slave_info_str = std::regex_replace(line, re_slave_match, "$2");
-                RedisSlaveInfo rsi = m_parse_slave_info(slave_info_str);
-                m_master_slave_info.push_back(rsi);
+            pos = line.find("slave");
+            if ((pos != std::string::npos) && (pos == 0)) {
+                if ((line.find("state=") != std::string::npos) && (line.find("offset=") != std::string::npos)) {
+                    slave_info_str = line;
+                    colon_pos = line.find(":");
+                    if (colon_pos != std::string::npos) {
+                        slave_info_str.erase(0, colon_pos + 1); // add one for colon itself
+                        RedisSlaveInfo rsi = m_parse_slave_info(slave_info_str);
+                        m_master_slave_info.push_back(rsi);
+                    }
+                }
             }
         }
     }
