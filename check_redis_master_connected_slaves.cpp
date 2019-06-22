@@ -279,7 +279,7 @@ int main(int argc, char **argv) {
             _rc = STATUS_CRITICAL;
         } else {
             master_offset = role.GetMasterReplicationOffset();
-            std::string perfdata{ " | "};
+            std::string perfdata{ "" };
             for (auto slv: slaves) {
                 mip = slv.GetIP();
                 mport = slv.GetPort();
