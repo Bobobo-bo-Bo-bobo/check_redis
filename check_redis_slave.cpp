@@ -27,7 +27,7 @@ void usage(void) {
     std::cout << "check_redis_slave is distributed under the terms of the GNU General" << std::endl;
     std::cout << "Public License Version 3. (http://www.gnu.org/copyleft/gpl.html)" << std::endl;
     std::cout << std::endl;
-    std::cout << "Check if Redis slave is connected to it's master" << std::endl;
+    std::cout << "Check if Redis slave is connected to its master" << std::endl;
     std::cout << std::endl;
     std::cout << "Usage: check_redis_slave [-h|--help] -H <host>|--host=<host> [-p <port>|--port=<port>]" <<std::endl;
     std::cout << "         [-t <sec>|--timeout=<sec>]" << std::endl;
