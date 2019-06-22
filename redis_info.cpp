@@ -195,3 +195,8 @@ RedisSlaveInfo RedisRoleInfo::m_parse_slave_info(std::string s) {
 long long RedisRoleInfo::GetMissingData(void) {
     return m_master_repl_offset - m_slave_repl_offset;
 }
+
+long long RedisRoleInfo::GetMasterReplicationOffset(void) {
+    return m_master_repl_offset;
+}
+

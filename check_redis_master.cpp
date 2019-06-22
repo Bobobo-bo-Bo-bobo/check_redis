@@ -138,9 +138,12 @@ int main(int argc, char **argv) {
  
     RedisRoleInfo role { redis_info };
 
-    if ((role.GetRole() != REDIS_ROLE_MASTER) && (role.GetRole() != REDIS_ROLE_CHAINED_REPLICATION_SLAVE)) {
+    if (role.GetRole() != REDIS_ROLE_MASTER) {
         std::cout << "Not running as a master | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0" << std::endl;
         return STATUS_CRITICAL;
+    }
+    if (role.GetRole() != REDIS_ROLE_CHAINED_REPLICATION_SLAVE) {
+        std::cout << "Server runs as master in a chained replication setup | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0" << std::endl;
     }
 
     std::cout << "Server runs as master | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0" << std::endl;

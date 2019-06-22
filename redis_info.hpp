@@ -29,7 +29,8 @@ class RedisRoleInfo {
         int GetMasterLastIOAgo(void);
         int GetNumberOfConnectedSlaves(void);
         std::vector<RedisSlaveInfo> GetSlaveInformation(void);
-        long long GetMissingData(void);
+        long long GetMissingData(void); // only valid if running as slave
+        long long GetMasterReplicationOffset(void);
 
     private:
         void m_parse_info_lines(std::vector<std::string>);

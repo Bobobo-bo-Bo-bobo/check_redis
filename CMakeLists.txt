@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(check_redis)
 
-set (CHECK_REDIS_VERSION "1.2.1")
+set (CHECK_REDIS_VERSION "1.3.0")
 # set(CMAKE_BUILD_TYPE Debug)
 
 include (FindPkgConfig)
@@ -35,7 +35,14 @@ target_link_libraries(check_redis_master util)
 target_link_libraries(check_redis_master redis_slave_info)
 target_link_libraries(check_redis_master ${HIREDIS_LDFLAGS})
 
+add_executable(check_redis_master_connected_slaves check_redis_master_connected_slaves.cpp)
+target_link_libraries(check_redis_master_connected_slaves redis_info)
+target_link_libraries(check_redis_master_connected_slaves util)
+target_link_libraries(check_redis_master_connected_slaves redis_slave_info)
+target_link_libraries(check_redis_master_connected_slaves ${HIREDIS_LDFLAGS})
+
 install(TARGETS check_redis_slave DESTINATION bin)
 install(TARGETS check_redis_slave_replication DESTINATION bin)
 install(TARGETS check_redis_master DESTINATION bin)
+install(TARGETS check_redis_master_connected_slaves DESTINATION bin)
 
