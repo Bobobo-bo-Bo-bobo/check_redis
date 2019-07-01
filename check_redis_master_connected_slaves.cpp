@@ -296,7 +296,7 @@ int main(int argc, char **argv) {
             } else if (max_delta >= warn_delta) {
                 _rc = STATUS_WARNING;
             }
-            std::cout << "Maximum of outstanding data to slaves is " << delta << " bytes | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0";
+            std::cout << "Maximum of outstanding data to slaves is " << delta << " bytes | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0 ";
             std::cout << perfdata << std::endl;
         }
     }

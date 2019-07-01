@@ -144,6 +144,7 @@ int main(int argc, char **argv) {
     }
     if (role.GetRole() != REDIS_ROLE_CHAINED_REPLICATION_SLAVE) {
         std::cout << "Server runs as master in a chained replication setup | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0" << std::endl;
+        return STATUS_OK;
     }
 
     std::cout << "Server runs as master | connected_slaves=" << role.GetNumberOfConnectedSlaves() << ";;;0" << std::endl;
