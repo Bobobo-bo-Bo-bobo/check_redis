@@ -47,7 +47,7 @@ void usage(void) {
     std::cout << std::endl;
     std::cout << "  -c <lim>            Report critical condition if last master was <lim> or more ago." << std::endl;
     std::cout << "  --critical=<lim>    or if missing data is greater or equal than <lim> (if -D/--data is used)" << std::endl;
-    std::cout << "                      Default: " << DEFAULT_REDIS_IO_AGO_CRITICAL << " sec or " << DEFAULT_REDIS_SLAVE_OFFET_CRITICAL <<" bytes" << std::endl;
+    std::cout << "                      Default: " << DEFAULT_REDIS_IO_AGO_CRITICAL << " sec or " << DEFAULT_REDIS_SLAVE_OFFSET_CRITICAL <<" bytes" << std::endl;
     std::cout << std::endl;
     std::cout << "  -p <port>           Redis port to connect to," << std::endl;
     std::cout << "  --port=<port>       Default: " << DEFAULT_REDIS_PORT << std::endl;
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     redisReply *reply = NULL;
     int t_sec = DEFAULT_REDIS_CONNECT_TIMEOUT;
     long long warn_delta = DEFAULT_REDIS_SLAVE_OFFSET_WARNING;
-    long long crit_delta = DEFAULT_REDIS_SLAVE_OFFET_CRITICAL;
+    long long crit_delta = DEFAULT_REDIS_SLAVE_OFFSET_CRITICAL;
     int last_io_warn = DEFAULT_REDIS_IO_AGO_WARNING;
     int last_io_crit = DEFAULT_REDIS_IO_AGO_CRITICAL;
     long long warn_limit = -1;

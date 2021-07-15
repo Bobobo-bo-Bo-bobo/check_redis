@@ -37,28 +37,28 @@ void usage(void) {
     std::cout << "Usage: check_redis_master_connected_slaves [-h|--help] -H <host>|--host=<host> [-p <port>|--port=<port>]" <<std::endl;
     std::cout << "         [-t <sec>|--timeout=<sec>] [-c <lim>|--critical=<lim>] [-w <lim>|--warn=<lim>] [-S|--slaves] " << std::endl;
     std::cout << std::endl;
-    std::cout << "  -h              This text." << std::endl;
+    std::cout << "  -h                  This text." << std::endl;
     std::cout << "  --help" << std::endl;
     std::cout << std::endl;
     std::cout << "  -S                  Check number of connected slaves." << std::endl;
     std::cout << "  --slaves" << std::endl;
     std::cout << std::endl;
-    std::cout << "  -H <host>       Redis server to connect to." << std::endl;
-    std::cout << "  --host=<host>   This option is mandatory." << std::endl;
+    std::cout << "  -H <host>           Redis server to connect to." << std::endl;
+    std::cout << "  --host=<host>       This option is mandatory." << std::endl;
     std::cout << std::endl;
-    std::cout << "  -p <port>       Redis port to connect to," << std::endl;
-    std::cout << "  --port=<port>   Default: " << DEFAULT_REDIS_PORT << std::endl;
+    std::cout << "  -p <port>           Redis port to connect to," << std::endl;
+    std::cout << "  --port=<port>       Default: " << DEFAULT_REDIS_PORT << std::endl;
     std::cout << std::endl;
     std::cout << "  -c <lim>            Report critical condition if master has <lim> slaves or less." << std::endl;
-    std::cout << "  --critical=<lim>    or if missing data is greater or equal than <lim> (if -S/--slave is used)" << std::endl;
-    std::cout << "                      Default: " << DEFAULT_REDIS_MASTER_CONNECTED_SLAVES_CRITICAL << " or " << DEFAULT_REDIS_SLAVE_OFFET_CRITICAL << " bytes" << std::endl;
+    std::cout << "  --critical=<lim>    Or if missing data is greater or equal than <lim> (if -S/--slave is used)" << std::endl;
+    std::cout << "                      Default: " << DEFAULT_REDIS_MASTER_CONNECTED_SLAVES_CRITICAL << " or " << DEFAULT_REDIS_SLAVE_OFFSET_CRITICAL << " bytes" << std::endl;
     std::cout << std::endl;
-    std::cout << "  -t <sec>        Connection timout in seconds." << std::endl;
-    std::cout << "  --timeout=<sec> Default: " << DEFAULT_REDIS_CONNECT_TIMEOUT << std::endl;
+    std::cout << "  -t <sec>            Connection timout in seconds." << std::endl;
+    std::cout << "  --timeout=<sec>     Default: " << DEFAULT_REDIS_CONNECT_TIMEOUT << std::endl;
     std::cout << std::endl;
     std::cout << "  -w <lim>            Report warning condition if master has <lim> slaves or less." << std::endl;
     std::cout << "  --warn=<lim>        or if missing data is greater or equal than <lim> (if -D/--data is used)" << std::endl;
-    std::cout << "                      Default: " << DEFAULT_REDIS_MASTER_CONNECTED_SLAVES_WARNING << " or " << DEFAULT_REDIS_SLAVE_OFFET_CRITICAL << " bytes" << std::endl;
+    std::cout << "                      Default: " << DEFAULT_REDIS_MASTER_CONNECTED_SLAVES_WARNING << " or " << DEFAULT_REDIS_SLAVE_OFFSET_WARNING << " bytes" << std::endl;
     std::cout << std::endl;
 }
 
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     int slv_warn = DEFAULT_REDIS_MASTER_CONNECTED_SLAVES_WARNING;
     int slv_crit = DEFAULT_REDIS_MASTER_CONNECTED_SLAVES_CRITICAL;
     long long warn_delta = DEFAULT_REDIS_SLAVE_OFFSET_WARNING;
-    long long crit_delta = DEFAULT_REDIS_SLAVE_OFFET_CRITICAL;
+    long long crit_delta = DEFAULT_REDIS_SLAVE_OFFSET_CRITICAL;
     long long max_delta = LLONG_MIN;
     long slave_online = 0;
     long slave_wait_bgsave = 0;
