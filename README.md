@@ -2,6 +2,7 @@
 These Nagios checks can be used to check Redis master and slave and their replication state in a master/slave setup.
 
 | *Plugin* | *Description* |
+|:---------|:--------------|
 | `check_redis_master` | Check if the requested Redis instance runs as master |
 | `check_redis_slave` | Check if the requested Redis instance runs as a server and is connected to a Redis master |
 | `check_redis_master_connected_slaves` | Check the number of connected slaves or the amount of missing data on the slaves |
